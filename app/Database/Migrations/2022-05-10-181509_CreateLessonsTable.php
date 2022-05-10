@@ -4,7 +4,7 @@ namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
 
-class CreateStudentsTable extends Migration
+class CreateLessonsTable extends Migration
 {
     public function up()
     {
@@ -15,27 +15,20 @@ class CreateStudentsTable extends Migration
                     'constraint' => 11,
                     'unsigned' => true,
                     'auto_increment' => true,
-                ] ,
+                ],
                 'title' => [
                     'type' => 'VARCHAR',
-                    'constraint' => 25,
+                    'constraint' => '25',
                 ],
-                'lesson' => [
-                    'type' => 'VARCHAR',
-                    'constraint' => 25,
-                ],
-                'description' => [
-                    'type' => 'VARCHAR',
-                    'constraint' => 250,
-                ],
+
             ]
         );
         $this->forge->addKey('id', true);
-        $this->forge->createTable('timetable');
+        $this->forge->createTable('lessons');
     }
 
     public function down()
     {
-        $this->forge->dropTable('timetable');
+        $this->forge->dropTable('lessons');
     }
 }

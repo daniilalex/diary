@@ -15,19 +15,16 @@ class CreateStudentsTable extends Migration
                     'constraint' => 11,
                     'unsigned' => true,
                     'auto_increment' => true,
-                ] ,
-                'name' => [
-                    'type' => 'VARCHAR',
-                    'constraint' => 25,
                 ],
-                'class' => [
-                    'type' => 'VARCHAR',
-                    'constraint' => 25,
+                'user_id' => [
+                    'type' => 'INT',
+                    'constraint' => 11,
                 ],
-                'description' => [
-                    'type' => 'VARCHAR',
-                    'constraint' => 250,
-                ]
+                'class_id' => [
+                    'type' => 'INT',
+                    'constraint' => 11,
+                ],
+
             ]
         );
         $this->forge->addKey('id', true);
