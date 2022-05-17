@@ -14,7 +14,13 @@ class AuthModel extends Model
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = [];
+    protected $allowedFields    = [
+        'email',
+        'password',
+        'firstname',
+        'lastname',
+        'type'
+    ];
 
     // Dates
     protected $useTimestamps = false;
