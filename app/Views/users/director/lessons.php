@@ -22,16 +22,29 @@
 <div class="content is-normal" style="margin-left: 20px">
     <h1>Lessons</h1>
 </div>
+<div class="create" style="width: 300px; border: #31708f 1px solid;margin: 10px 0 10px 20px">
+    <form style="width: 250px;margin: 0 20px;" action="<?= base_url('/director/createLesson') ?>" method="post">
+        <div class="content is-normal" style="margin: 10px 0 10px 20px">
+            <h1>Add Lesson:</h1>
+        </div>
+        <input class="input is-info" type="text" name="title"><br><br>
+        <input style="margin-bottom: 15px" type="submit" class="button is-primary" value="create">
+    </form>
+</div>
 <hr>
 <table class="table" style="margin-left: 20px">
     <tr>
         <th>ID</th>
         <th>Title</th>
+        <th>Edit</th>
+        <th>Delete</th>
     </tr>
     <? foreach ($lessons as $lesson) { ?>
         <tr>
             <td><?= $lesson['id'] ?></td>
             <td><?= $lesson['title'] ?></td>
+            <td><a class="button is-small" href="<?= base_url('/director/editLesson/' . $lesson['id']) ?>">Edit</a></td>
+            <td><a class="button is-small" href="<?= base_url('/director/deleteLesson/' . $lesson['id']) ?>">Delete</a></td>
         </tr>
     <? } ?>
 </table>
