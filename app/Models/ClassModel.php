@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use CodeIgniter\Model;
+use App\Models\StudentModel;
+
 
 class ClassModel extends Model
 {
@@ -39,4 +41,20 @@ class ClassModel extends Model
     protected $afterFind      = [];
     protected $beforeDelete   = [];
     protected $afterDelete    = [];
+
+    public function getStudents(int $id = null): array
+    {
+        if ($id != null) {
+            $students = (new StudentModel)
+                ->select('students.id, users.email, users.firstname, users.lastname, students.user_id')
+                ->join('users', 'users.id = students.user_id')
+                ->where('class_id', $id)
+                ->findAll();
+        } else {
+            $students = [];
+        }
+
+        return $students;
+    }
+
 }
