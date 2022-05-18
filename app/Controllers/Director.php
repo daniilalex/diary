@@ -17,8 +17,8 @@ class Director extends BaseController
     public $teachers;
     public $lessons;
     public $classes;
-    protected $session;
-    public $students;
+    protected \CodeIgniter\Session\Session $session;
+    public StudentModel $students;
 
 
     public function __construct()
@@ -26,10 +26,10 @@ class Director extends BaseController
         if (session()->user['type'] != 'director') {
             dd((array)'Allowed only director');
         }
-        $teachers = $this->teachers = new TeacherModel();
-        $lessons = $this->lessons = new LessonModel();
-        $classes = $this->classes = new ClassModel();
-        $students = $this->students = new StudentModel();
+        $this->teachers = new TeacherModel();
+        $this->lessons = new LessonModel();
+        $this->classes = new ClassModel();
+        $this->students = new StudentModel();
 
     }
 
@@ -92,6 +92,8 @@ class Director extends BaseController
     {
         $data = [
             'lessons' => $this->lessons->findAll(),
+            'errors' => $this->session->getFlashdata('errors') ?? null,
+            'success' => $this->session->getFlashdata('success') ?? null,
         ];
 
         echo view('users/director/lessons', $data);
@@ -210,7 +212,6 @@ class Director extends BaseController
                 'user_id' => $user_id,
                 'class_id' => $this->request->getVar('class_id') ?? null,
             ];
-            var_dump($student_data);
             $this->students->insert($student_data);
 
             return redirect()->to(base_url('/director/students'))->with('success', 'Student is created');
@@ -219,6 +220,7 @@ class Director extends BaseController
         }
 
     }
+
     public function editStudent($id)
     {
         //take data from teacher table
@@ -295,20 +297,64 @@ class Director extends BaseController
         return redirect()->to(base_url('/director/teachers'))->with('errors', 'Teacher is not found');
     }
 
+    public function createLesson()
+    {
+        if ($this->validate([
+            'title' => 'required|min_length[3]',
+        ])) {
+            $lesson_data = [
+                'title' => $this->request->getVar('title'),
+            ];
+            $this->lessons->insert($lesson_data);
+
+            return redirect()->to(base_url('/director/lessons'))->with('success', 'Lesson is created');
+        } else {
+            return redirect()->to(base_url('/director/lessons'))->with('errors', $this->validator->listErrors());
+        }
+    }
+    public function editLesson($id)
+    {
+        //take data from teacher table
+        $lesson = $this->lessons->find($id);
+        //if true, put to the data all data from database and show teacher_edit.php
+        if ($lesson) {
+            $data = [
+                'lessons' => $this->lessons->findAll(),
+                'lesson' => $lesson
+            ];
+            return view('users/director/lesson_edit', $data);
+        }
+        //if false return to the student page
+        return redirect()->to(base_url('director/lessons'))->with('errors', 'Lesson is not found');
+    }
+    public function updateLesson(int $id)
+    {
+        $lesson = $this->lessons->find($id);
+        if ($lesson) {
+            if ($this->validate([
+                'lesson' => 'required|min_length[3]',
+            ])) {
+                $lesson_data = [
+                    'title' => $this->request->getVar('lesson'),
+                ];
+
+                $this->lessons->update($id,$lesson_data);
+
+                return redirect()->to(base_url('/director/lessons'))->with('success', 'Lesson is successfully updated');
+            }
+        }
+        return redirect()->to(base_url('/director/lessons'))->with('errors', 'Lesson is not found');
+    }
+    public function deleteLesson($id) {
+        $lesson = $this->lessons->find($id);
+        if ($lesson) {
+            $this->lessons->delete($lesson['id']);
+//            $this->teachers->delete($lesson['lesson_id']);
+          return  redirect()->to(base_url('/director/lessons'))->with('success', 'Lesson successfully deleted');
+
+        }
+        return redirect()->to(base_url('/director/lessons'))->with('errors', 'Lesson is not found');
+    }
 }
 
-//    public function getData()
-//    {
-//        $db = \Config\Database::connect();
-//        $builder = $db->table('users');
-//        $query = $builder->get();// Produces: SELECT * FROM 'users'
-//        $query = $db->query("SELECT * from diary.users");
-//        //This method returns the query result as an array of objects
-//        foreach ($query->getResultArray() as $row) {
-//            echo $row['firstname'] . PHP_EOL;
-//            echo $row['lastname'] . PHP_EOL ;
-//            echo $row['email'] . PHP_EOL. ',';
-//            echo $row['type'] . PHP_EOL. '|';
-//        }
-//        $query = $builder->getWhere(['id'=> $id]);
-//    }
+
