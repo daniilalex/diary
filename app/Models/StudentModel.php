@@ -53,7 +53,8 @@ class StudentModel extends Model
         $data = $this
             ->select('students.id, users.email, users.firstname, users.lastname, classes.title as class, students.class_id, students.user_id')
             ->join('users', 'users.id = students.user_id')
-            ->join('classes', 'classes.id = students.class_id', 'left');
+            ->join('classes', 'classes.id = students.class_id', 'left')
+            ->orderBy('classes.title');
 //find by id else find all
         if ($id != null) {
             return $data->find($id);
