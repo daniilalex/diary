@@ -40,6 +40,11 @@
             <a href="<?=base_url('/Director/lessons/')?>">Lessons</a>
         </li>
     </div>
+    <div class="button" style="margin: 35px 0 0 20px">
+        <li>
+            <a href="<?=base_url('/Auth/log_out/')?>">Log Out</a>
+        </li>
+    </div>
 </ul>
 
 </body>
