@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Controllers;
-
 use App\Controllers\BaseController;
 use App\Models\AuthModel;
 use App\Models\LessonModel;
@@ -18,7 +17,8 @@ class Director extends BaseController
     public $lessons;
     public $classes;
     protected \CodeIgniter\Session\Session $session;
-    public StudentModel $students;
+    public $students;
+
 
 
     public function __construct()
@@ -48,7 +48,7 @@ class Director extends BaseController
         return view('users/director/home', $data);
     }
 
-    public function teachers()
+    public function teachers($id = null)
     {
         $data = [
             'lessons' => $this->lessons->findAll(),
@@ -57,7 +57,9 @@ class Director extends BaseController
             'errors' => $this->session->getFlashdata('errors') ?? null,
             'success' => $this->session->getFlashdata('success') ?? null,
         ];
-
+        if ($id != null) {
+            $data['teacher'] = $this->teachers->findAllWithRelations($id);
+        }
         echo view('users/director/teachers', $data);
 
     }
@@ -73,17 +75,24 @@ class Director extends BaseController
         //create new array key in data
         if ($id != null) {
             $data['student'] = $this->students->getWithRelations($id);
+
         }
 
         echo view('users/director/students', $data);
 
     }
 
-    public function classes()
+    public function classes($id = null)
     {
         $data = [
             'classes' => $this->classes->findAll(),
+            'errors' => $this->session->getFlashdata('errors') ?? null,
+            'success' => $this->session->getFlashdata('success') ?? null,
         ];
+        if ($id != null) {
+            $data['class'] = $this->classes->find($id);
+
+        }
 
         echo view('users/director/classes', $data);
     }
@@ -101,7 +110,7 @@ class Director extends BaseController
 
     public function createTeacher()
     {
-        //if validation ok, pass values from post to the array and insert them to the databse
+        //if validation ok, pass values from post to the array and insert them to the database
         if ($this->validate([
             'password' => 'required|min_length[2]',
             'email' => 'required|valid_email|is_unique[users.email]',
@@ -122,37 +131,20 @@ class Director extends BaseController
             $teacher_data = [
                 'user_id' => $user_id,
                 'lesson_id' => $this->request->getVar('lesson_id') ?? null,
-                'class_id' => $this->request->getVar('class_id') ?? null,
+                'class_id' => $this->request->getPost('class_id') ?? null,
             ];
             $this->teachers->insert($teacher_data);
 
-            return redirect()->to(base_url('/director/index'))->with('success', 'Teacher is created');
+            return redirect()->to(base_url('/director/teachers'))->with('success', 'Teacher is created');
         } else {
             return redirect()->to(base_url('/director/index'))->with('errors', $this->validator->listErrors());
         }
     }
 
-    public function editTeacher($id)
-    {
-        //take data from teacher table
-        $teacher = $this->teachers->getFullData($id);
-        //if true, put to the data all data from database and show teacher_edit.php
-        if ($teacher) {
-            $data = [
-                'lessons' => $this->lessons->findAll(),
-                'classes' => $this->classes->findAll(),
-                'teacher' => $teacher
-            ];
-            return view('users/director/teacher_edit', $data);
-        }
-        //if false return to the main page
-        return redirect()->to(base_url('director/teachers'))->with('errors', 'Teacher is not found');
-    }
-
     public function updateTeacher(int $id)
     {
         //get data from teacher table
-        $teacher = (new TeacherModel())->getFullData($id);
+        $teacher = $this->teachers->getFullData($id);
         if ($teacher) {
             if ($this->validate([
                 'password' => 'permit_empty|min_length[2]',//permit_empty - Allows the field to receive an empty array,empty string, null or false.
@@ -162,19 +154,19 @@ class Director extends BaseController
                 'lesson_id' => 'permit_empty|is_not_unique[lessons.id]',
                 'class_id' => 'permit_empty|is_not_unique[classes.id]',
             ])) {
-                $userData = [
+                $user_data = [
                     'email' => $this->request->getVar('email'),
                     'firstname' => $this->request->getVar('firstname'),
                     'lastname' => $this->request->getVar('lastname'),
                 ];
 
                 $password = $this->request->getVar('password') ?? null;
-                //if not null pass old password from post
+                //if not null add old password from post
                 if ($password != null) {
-                    $userData['password'] = md5($this->request->getVar('password'));
+                    $user_data['password'] = md5($this->request->getVar('password'));
                 }
 //update user table
-                (new AuthModel())->update($teacher['user_id'], $userData);
+                (new AuthModel())->update($teacher['user_id'], $user_data);
 //update teacher table
                 $this->teachers->update($id, [
                     'lesson_id' => $this->request->getVar('lesson_id') ?? null,
@@ -188,9 +180,19 @@ class Director extends BaseController
         return redirect()->to(base_url('/director/index'))->with('errors', 'The teacher is not found');
     }
 
+    public function deleteTeacher($id)
+    {
+        $teacher = $this->teachers->find($id);
+        if ($teacher) {
+            (new AuthModel())->delete($teacher['user_id']);
+            $this->teachers->delete($teacher['id']);
+            return redirect()->to(base_url('/director/teachers'))->with('success', 'Teacher successfully deleted');
+        }
+        return redirect()->to(base_url('/director/teachers'))->with('errors', 'Teacher is not found');
+    }
+
     public function createStudent()
     {
-
         //if validation ok, pass values from post to the array and insert them to the databse
         if ($this->validate([
             'password' => 'required|min_length[2]',
@@ -219,23 +221,6 @@ class Director extends BaseController
             return redirect()->to(base_url('/director/students'))->with('errors', $this->validator->listErrors());
         }
 
-    }
-
-    public function editStudent($id)
-    {
-        //take data from teacher table
-        $student = $this->students->getWithRelations($id);
-        //if true, put to the data all data from database and show teacher_edit.php
-        if ($student) {
-            $data = [
-                'lessons' => $this->lessons->findAll(),
-                'classes' => $this->classes->findAll(),
-                'student' => $student
-            ];
-            return view('users/director/student_edit', $data);
-        }
-        //if false return to the student page
-        return redirect()->to(base_url('director/students'))->with('errors', 'Student is not found');
     }
 
     public function updateStudent(int $id)
@@ -286,17 +271,6 @@ class Director extends BaseController
         return redirect()->to(base_url('/director/students'))->with('errors', 'Student is not found');
     }
 
-    public function deleteTeacher($id)
-    {
-        $teacher = $this->teachers->find($id);
-        if ($teacher) {
-            (new AuthModel())->delete($teacher['user_id']);
-            $this->teachers->delete($teacher['id']);
-            return redirect()->to(base_url('/director/teachers'))->with('success', 'Teacher successfully deleted');
-        }
-        return redirect()->to(base_url('/director/teachers'))->with('errors', 'Teacher is not found');
-    }
-
     public function createLesson()
     {
         if ($this->validate([
@@ -312,6 +286,7 @@ class Director extends BaseController
             return redirect()->to(base_url('/director/lessons'))->with('errors', $this->validator->listErrors());
         }
     }
+
     public function editLesson($id)
     {
         //take data from teacher table
@@ -327,34 +302,107 @@ class Director extends BaseController
         //if false return to the student page
         return redirect()->to(base_url('director/lessons'))->with('errors', 'Lesson is not found');
     }
+
     public function updateLesson(int $id)
     {
         $lesson = $this->lessons->find($id);
         if ($lesson) {
             if ($this->validate([
-                'lesson' => 'required|min_length[3]',
+                'lesson' => 'required|min_length[3]|is_unique[lessons.title,id,' . $id . ']',
             ])) {
                 $lesson_data = [
                     'title' => $this->request->getVar('lesson'),
                 ];
 
-                $this->lessons->update($id,$lesson_data);
+                $this->lessons->update($id, $lesson_data);
 
                 return redirect()->to(base_url('/director/lessons'))->with('success', 'Lesson is successfully updated');
             }
         }
-        return redirect()->to(base_url('/director/lessons'))->with('errors', 'Lesson is not found');
+        return redirect()->to(base_url('/director/index'))->with('errors', 'Lesson is not found');
     }
-    public function deleteLesson($id) {
+
+    public function deleteLesson(int $id)
+    {
         $lesson = $this->lessons->find($id);
         if ($lesson) {
             $this->lessons->delete($lesson['id']);
-//            $this->teachers->delete($lesson['lesson_id']);
-          return  redirect()->to(base_url('/director/lessons'))->with('success', 'Lesson successfully deleted');
+            $this->teachers->set('lesson_id', null)
+                ->where('lesson_id', $id)
+                ->update();
+
+            return redirect()->to(base_url('/director/lessons'))
+                ->with('success', 'Lesson successfully deleted');
 
         }
-        return redirect()->to(base_url('/director/lessons'))->with('errors', 'Lesson is not found');
+        return redirect()->to(base_url('/director/lessons'))
+            ->with('errors', 'Lesson is not found');
     }
+
+    public function createClass()
+    {
+        if ($this->validate([
+            'class' => 'required|min_length[2]'
+        ])) {
+            $class_data = [
+                'title' => $this->request->getPost('class'),
+                'max_week_lessons' => $this->request->getPost('max_lessons')
+            ];
+            $this->classes->insert($class_data);
+            return redirect()->to(base_url('director/classes'))->with('success', 'The class is created');
+        }
+        return redirect()->to(base_url('director/classes'))->with('errors', 'The class is not created');
+    }
+
+    /**
+     * @throws \ReflectionException
+     */
+    public function updateClass(int $id)
+    {
+        $class = $this->classes->find($id);
+        if ($class) {
+            if ($this->validate([
+                'class' => 'required|min_length[3]|is_unique[lessons.title,id,' . $id . ']',
+            ])) {
+                $class_data = [
+                    'title' => $this->request->getPost('class') ?? null,
+                    'max_week_lessons' => $this->request->getPost('max_lessons') ?? null
+                ];
+
+                $this->classes->update($id, $class_data);
+
+                return redirect()->to(base_url('/director/classes'))->with('success', 'Class is successfully updated');
+            }
+        }
+        return redirect()->to(base_url('/director/index'))->with('errors', 'Class is not found');
+    }
+
+
+    public function deleteClass(int $id)
+    {
+        $class = $this->classes->find($id);
+        if ($class) {
+            $this->classes->delete($id);
+            $this->teachers
+                ->set('class_id', 0)
+                ->where('class_id', $id)
+                ->update();
+            $this->students
+                ->set('class_id', 0)
+                ->where('class_id', $id)
+                ->update();
+
+            return redirect()->to(base_url('/director/classes'))->with('success', 'Class is deleted');
+        } else {
+            $errors = 'Error';
+        }
+
+        return redirect()->to(base_url('/director/classes'))->with('errors', $errors);
+    }
+
+
+
+
 }
 
 
