@@ -8,6 +8,7 @@ class UsersSeed extends Seeder
 {
     public function run()
     {
+        $this->db->table('classes')->truncate();
         $data = [
             [
                 'email' => 'director@user.com',
@@ -67,7 +68,7 @@ class UsersSeed extends Seeder
             ],
 
         ];
-$this->db->table('users')->truncate();
+
         $this->db->table('users')->insertBatch($data);
 
     }
