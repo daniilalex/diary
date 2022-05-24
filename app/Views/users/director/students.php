@@ -21,6 +21,43 @@
     <a style="color: white" href="<?= base_url('/director/index/') ?>">Go back</a>
 </div>
 <div class="container" style="display: flex; flex-wrap: wrap;">
+    <? if(isset($student)) { ?>
+        <div class="update" style="width: 300px; border: #31708f 1px solid;margin: 10px 0 10px 20px">
+
+            <form style="width: 250px;margin: 0 20px;" action="<?= base_url('/director/updateStudent/' . $student['id']) ?>"
+                  method="post">
+
+                <div class="content is-normal">
+                    <h1>Update student</h1>
+                </div>
+                <label for="email">Email</label><br>
+                <input type="text" class="input is-info" name="email" value="<?= $student['email'] ?>"><br>
+
+                <label for="password">Password</label><br>
+                <input type="password" class="input is-info" name="password"><br>
+
+                <label for="firstname">First Name</label><br>
+                <input type="text" class="input is-info" name="firstname" value="<?= $student['firstname'] ?>"><br>
+
+                <label for="lastName">Last Name</label><br>
+                <input type="text" class="input is-info" name="lastname" value="<?= $student['lastname'] ?>"><br>
+
+                <label for="lesson_id">Classes</label><br>
+                <select name="class_id">
+                    <option value="">-</option>
+                    <? foreach ($classes as $class) { ?>
+                        <option value="<?= $class['id'] ?>"><? if ($class['id'] == $student['class_id']) {
+                                echo 'selected';
+                            } ?><?= $class['title'] ?></option>
+                    <? } ?>
+                </select> <br><br>
+                <input style="margin-bottom: 15px" type="submit" class="button is-primary" value="update">
+                <div class="button is-primary" style="float: right;">
+                    <a style="color: white" href="<?= base_url('/director/students/') ?>">Go back</a>
+                </div>
+            </form>
+        </div>
+    <? } ?>
 <div class="create" style="width: 300px; border: #31708f 1px solid;margin: 10px 0 10px 20px">
     <form style="width: 250px;margin: 0 20px;" action="<?= base_url('/director/createStudent') ?>" method="post">
         <div class="content is-normal" style="margin: 10px 0 10px 20px">
@@ -68,7 +105,7 @@
                 <td><?= $student['firstname'] ?></td>
                 <td><?= $student['lastname'] ?></td>
                 <td><?= $student['class'] ?></td>
-                <td><a class="button is-small" href="<?= base_url('/director/editStudent/' . $student['id']) ?>">Edit</a></td>
+                <td><a class="button is-small" href="<?= base_url('/director/students/' . $student['id']) ?>">Edit</a></td>
                 <td><a class="button is-small" href="<?= base_url('/director/deleteStudent/' . $student['id']) ?>">Delete</a></td>
             </tr>
         <? } ?>
