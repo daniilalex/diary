@@ -53,20 +53,21 @@ class TimeTableModel extends Model
     const THURSDAY = 'thursday';
     const FRIDAY = 'friday';
     const DAYS = [
+        //Use self:: to refer to the current class.
         self::MONDAY,
         self::TUESDAY,
         self::WEDNESDAY,
         self::THURSDAY,
         self::FRIDAY,
     ];
-
+//static function can access methods and properties of a class and could be invoked directly outside class by using scope ::
     static public function getLessons(int $class_id)
     {
         $response = [];
         foreach (self::DAYS as $day) {
             $response[$day] = (new self())
-                ->select('schedules.id, schedules.lesson_number, lessons.title')
-                ->join('lessons', 'lessons.id = schedules.lesson_id', 'left')
+                ->select('timetable.id, timetable.lesson_number, lessons.title')
+                ->join('lessons', 'lessons.id = timetable.lesson_id', 'left')
                 ->where('class_id', $class_id)
                 ->where('week_day', $day)
                 ->orderBy('lesson_number', 'ASC')
