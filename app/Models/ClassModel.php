@@ -2,8 +2,9 @@
 
 namespace App\Models;
 
-use CodeIgniter\Model;
 use App\Models\StudentModel;
+use CodeIgniter\Model;
+
 
 
 class ClassModel extends Model
@@ -16,7 +17,10 @@ class ClassModel extends Model
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = [];
+    protected $allowedFields    = [
+        'title',
+        'max_week_lessons'
+    ];
 
     // Dates
     protected $useTimestamps = false;
@@ -56,5 +60,21 @@ class ClassModel extends Model
 
         return $students;
     }
+
+    public function getTeachers(int $id = null): array
+    {
+        if ($id != null) {
+            $teachers = (new TeacherModel())
+                ->select('teachers.id, users.email, users.firstname, users.lastname, teachers.user_id')
+                ->join('users', 'users.id = teachers.user_id')
+                ->where('class_id', $id)
+                ->findAll();
+        } else {
+            $teachers = [];
+        }
+
+        return $teachers;
+    }
+
 
 }
