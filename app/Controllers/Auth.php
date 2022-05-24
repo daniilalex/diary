@@ -5,15 +5,19 @@ namespace App\Controllers;
 use App\Models\AuthModel;
 use App\Controllers\BaseController;
 
+
 class Auth extends BaseController
 {
+    public $db;
     public $user;
 
 //make constructor for easier work with table data
     public function __construct()
     {
-         $this->user = new AuthModel();
+        $this->db = \Config\Database::connect();
+        $this->user = new AuthModel();
     }
+
 //default method
     public function index()
     {
@@ -27,12 +31,12 @@ class Auth extends BaseController
             'password' => 'required|min_length[2]',
             'email' => 'required|valid_email',
         ])) {
-            //with method request, we call the getPost method which is return post values from input
+            //with method request, we call the getPost method which returns values from input
             $email = $this->request->getPost('email');
             //method will pull from $_REQUEST, so will return any data from $_GET, $POST, or $_COOKIE.
             $password = $this->request->getVar('password');
             //key is a name of input, $email is an input value, method first returning an array of results
-            $user = $this->user-> where('email', $email)->where('password', md5($password))->first();
+            $user = $this->user->where('email', $email)->where('password', md5($password))->first();
             if (!$user) {
                 $this->validator->setError('email', 'Bad password');
             } else {
@@ -40,17 +44,12 @@ class Auth extends BaseController
                 unset($user['password']);
                 //add user data to the session
                 $this->session->set('user', $user);
-                switch ($user['type']) {
-                    case 'director':
-                        $route = '/director/index';
-                        break;
-                    case 'teacher':
-                        $route = '/teacher/index';
-                        break;
-                    case 'student':
-                        $route = '/student/index';
-                        break;
-                }
+                //The match expression which is identity check of a value
+                $route = match ($user['type']) {
+                    'director' => '/director/index',
+                    'teacher' => '/teacher/index',
+                    'student' => '/student/index',
+                };
 
                 return redirect()->to(base_url($route));
             }
@@ -58,4 +57,11 @@ class Auth extends BaseController
 
         return view('login', ['errors' => $this->validator->listErrors()]);
     }
+
+    public function log_out()
+    {
+        $this->session->remove('user');
+        return redirect()->to(base_url('/'));
+    }
+
 }
