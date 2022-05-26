@@ -63,6 +63,7 @@ class TimeTableModel extends Model
 //static function can access methods and properties of a class and could be invoked directly outside class by using scope ::
     static public function getLessons(int $class_id)
     {
+
         $response = [];
         foreach (self::DAYS as $day) {
             $response[$day] = (new self())
@@ -76,5 +77,22 @@ class TimeTableModel extends Model
 
         return $response;
     }
+    //get all lessons by teacher_id by chosen date
+    public function getTeacherLessons(int $teacher_id, string $date = null) {
+        if($date == null) {
+            $date = date('Y-m-d');
+        }
+            $day = strtolower(date('l', strtotime($date)));
+
+        return $this
+            ->select('timetable.id, timetable.lesson_number, lessons.title, classes.title as class, week_day')
+            ->join('lessons', 'lessons.id = timetable.lesson_id', 'left')
+            ->join('classes', 'classes.id = timetable.class_id', 'left')
+            ->where('teacher_id', $teacher_id)
+            ->where('week_day', $day)
+            ->orderBy('lesson_number', 'ASC')
+            ->findAll();
+        }
+
 }
 
