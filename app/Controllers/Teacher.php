@@ -9,6 +9,7 @@ use App\Models\ClassModel;
 use App\Models\LessonModel;
 use App\Models\TimeTableModel;
 
+
 class Teacher extends BaseController
 {
     public $teachers;
@@ -16,6 +17,7 @@ class Teacher extends BaseController
     public $lessons;
     public $schedules;
     public $students;
+
 
 
     public function __construct()
@@ -33,28 +35,43 @@ class Teacher extends BaseController
         }
     }
 
-    public function index()
+    public function index(string $date = null)
     {
         //take a teacher id from session
         $teacher = $this->teachers->where('user_id', session()->user['id'])->first();
+        //take values from database, static method is using :: scopes. it invoked directly from class
         $data = [
-            'students' => $this->classes->getStudents($teacher['class_id']),
+            //get days with static function
             'days' => TimeTableModel::DAYS,
-            'teachers' => $this->teachers
+            'errors' => $this->session->getFlashdata('errors') ?? null,
+            'success' => $this->session->getFlashdata('success') ?? null,
+            //get teacher lessons with created model function
+            'teacher_schedule' => $this->schedules->getTeacherLessons($teacher['id'], $date)
+
+        ];
+//create date for displaying date
+        if ($date != null) {
+            $data['date'] = $date;
+        }
+
+
+//if teacher class_id isn't 0(like in database), add to the data new keys, for displaying teachers array
+        if ($teacher['class_id'] != 0 ) {
+            //get lessons value with static function from model class
+            $data['schedule'] = TimeTableModel::getLessons($teacher['class_id']);
+            //get teacher class
+            $data['class'] = $this->classes->find($teacher['class_id']);
+            //get teachers students
+            $data['students'] = $this->classes->getStudents($teacher['class_id']);
+            //get teacher who has lesson_id
+            $data['teachers'] = $this->teachers
                 ->select('teachers.id, users.email, users.firstname, users.lastname, lessons.title as lesson')
                 ->join('users', 'users.id = teachers.user_id')
                 ->join('lessons', 'lessons.id = teachers.lesson_id', 'left')
                 ->where('lesson_id !=', 0)
-                ->findAll(),
-            'errors' => $this->session->getFlashdata('errors') ?? null,
-            'success' => $this->session->getFlashdata('success') ?? null,
-            'schedule' => TimeTableModel::getLessons($teacher['class_id']),
-            'count_lessons' => $this->schedules->where('class_id', $teacher['class_id'])->countAll()
-        ];
-
-//if teacher class_id isn't null add to the data new key class with teacher class_id
-        if ($teacher['class_id'] != null) {
-            $data['class'] = $this->classes->find($teacher['class_id']);
+                ->findAll();
+            //count lessons from timetable database by teacher_class_id
+            $data['count_lessons'] = $this->schedules->where('class_id', $teacher['class_id'])->countAll();
         }
 
         return view('users/teacher/index', $data);
@@ -76,9 +93,13 @@ class Teacher extends BaseController
                 ->where('week_day', $this->request->getVar('week_day'))
                 ->where('lesson_number', $this->request->getVar('lesson_number'))
                 ->first();
+            //if $schedule is false take values with post method and insert them to the database
             if (!$schedule) {
+                //get user_id from session
                 $user = $this->teachers->where('user_id', session()->user['id'])->first();
+                //put value to class_id
                 $class_id = $user['class_id'];
+                //get teacher from database by id and get select value with post method
                 $teacher = $this->teachers->where('id', $this->request->getVar('teacher_id'))->first();
 
                 $schedule_data = [
@@ -98,5 +119,27 @@ class Teacher extends BaseController
             $errors = $this->validator->listErrors();
         }
         return  redirect()->to(base_url('/teacher/index'))->with('errors', $errors);
+    }
+
+    public function deleteLesson(int $id) {
+        $lesson = $this->schedules->find($id);
+        if($lesson) {
+            $this->schedules->delete($id);
+            return redirect()->to(base_url('/teacher/index'))->with('success', 'Lesson is successfully deleted');
+        }
+        return redirect()->to(base_url('/teachers/index'))->with('errors', 'Lesson is not found');
+    }
+
+    public function date()
+    {
+        if ($this->validate([
+            'date' => 'required|valid_date[Y-m-d]',
+        ])) {
+            $date = $this->request->getVar('date');
+            return redirect()->to(base_url('/teacher/index/' . $date));
+
+        }
+
+        return redirect()->to(base_url('/teacher/index'))->with('errors', 'Wrong date');
     }
 }
