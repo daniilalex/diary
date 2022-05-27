@@ -17,7 +17,9 @@
 <? if (isset($success)) { ?>
     <?= $success ?>
 <? } ?>
-
+<div class="button" style="margin: 35px 0 0 20px">
+    <a href="<?= base_url('/Auth/log_out/') ?>">Log out</a>
+</div>
 
 <? if (isset($class)) { ?>
     <div class="content is-normal" style="margin: 20px 0 0 20px">
@@ -28,9 +30,6 @@
     </div>
 
     <hr>
-    <div class="button" style="margin: 35px 0 0 20px">
-        <a href="<?= base_url('/Auth/log_out/') ?>">Log Out</a>
-    </div>
 
     <div class="container" style="width: 800px">
         <div class="flex" style="display: flex; width: 800px">
@@ -142,33 +141,80 @@
     </div>
 <? } else { ?>
 
-    <div class="content is-normal" style="margin: 20px 0 0 20px">
-        <h3>My schedule</h3>
-    </div>
-
-    <div class="content is-normal" style="margin: 20px 0 0 20px">
-        <h6>Date: <?= $date ?? date('Y-m-d') ?></h6>
-    </div>
-
-    <form style="width: 250px;margin: 0 20px;" action="<?= base_url('/teacher/date') ?>" method="post">
-        <input class="input is-info" type="text" name="date" value="<?= $date ?? date('Y-m-d') ?>"><br><br>
-        <input class="button is-primary" type="submit" value="Show">
-    </form>
-
-    <div class="table-container">
-        <table>
-            <? foreach ($teacher_schedule as $item) { ?>
-                <tr>
-                    <td>(<?= $item['title'] ?>)</td>
-                    <td><?= $item['week_day'] ?></td>
-                    <td>(<?= $item['lesson_number'] ?>)</td>
-                    <td>(<?= $item['class'] ?>)</td>
-                </tr>
-            <? } ?>
-        </table>
-    </div>
-
+<? if (isset($errors)) { ?>
+    <?= $errors ?>
 <? } ?>
+<? if (isset($success)) { ?>
+    <?= $success ?>
+<? } ?>
+
+<div class="container" style="width: 800px">
+    <div class="flex" style="display: flex; width: 800px; flex-direction: column;">
+        <div class="main" style="width: 600px; height: 230px;border: #31708f 1px solid;margin: 40px 0 0 20px;">
+            <div class="content is-normal" style="margin: 20px 0 0 20px">
+                <h3>My schedule</h3>
+            </div>
+
+            <div class="content is-normal" style="margin: 20px 0 0 20px">
+                <h6>Date: <?= $date ?? date('Y-m-d') ?></h6>
+            </div>
+
+            <form style="width: 250px;margin: 0 20px;" action="<?= base_url('/teacher/date') ?>" method="post">
+                <input class="input is-info" type="text" name="date" value="<?= $date ?? date('Y-m-d') ?>"><br><br>
+                <input class="button is-primary" type="submit" value="Show">
+            </form>
+        </div>
+    </div>
+
+
+    <div class="main" style="width: 600px; border: #31708f 1px solid;margin: 40px 0 0 20px;">
+        <div class="table-container" style="margin: 10px 20px;">
+            <div class="content is-normal" style="margin: 20px 0 0 20px">
+                <h3>Lesson schedule</h3>
+            </div>
+            <table class="table">
+                <? foreach ($teacher_schedule as $item) { ?>
+                    <tr>
+                        <td>Lesson number: <?= $item['lesson_number'] ?> </td>
+                        <td>
+                            <a href="<?= base_url('teacher/getLessonStudents/' . $item['lesson_id']) ?>">lesson: <?= $item['title'] ?></a>
+                        </td>
+                        <td><?= $item['week_day'] ?></td>
+                        <td> Class: <?= $item['class'] ?></td>
+                    </tr>
+                <? } ?>
+            </table>
+        </div>
+    </div>
+    <div class="main" style="width: 600px; border: #31708f 1px solid;margin: 40px 0 0 20px;">
+        <div class="table-container" style="margin: 10px 20px;">
+            <div class="content is-normal" style="margin: 20px 0 0 20px">
+                <h3>Students</h3>
+            </div>
+            <? if (isset($lesson) ?? null) { ?>
+
+                <table class="table">
+                    <tr>
+                        <th>Name</th>
+                        <th>Surname</th>
+                        <th>Action</th>
+                        <th>X</th>
+                    </tr>
+                    <? foreach ($teacher_schedule as $item) { ?>
+                        <tr>
+                            <td><?= $item['firstname'] ?></td>
+                            <td><?= $item['lastname'] ?></td>
+                            <td><input class="input is-small" type="text"></td>
+                            <td><a class="button is-small"
+                                   href="<?= base_url('/teacher/deleteStudent/' . $item['id']) ?>">Delete</a></td>
+                        </tr>
+                    <? } ?>
+                </table>
+            <? }
+            } ?>
+        </div>
+    </div>
+
 
 </body>
 </html>
