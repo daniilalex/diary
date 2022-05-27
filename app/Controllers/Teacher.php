@@ -19,7 +19,6 @@ class Teacher extends BaseController
     public $students;
 
 
-
     public function __construct()
     {
         $this->teachers = new TeacherModel();
@@ -27,7 +26,6 @@ class Teacher extends BaseController
         $this->classes = new ClassModel();
         $this->lessons = new LessonModel();
         $this->schedules = new TimeTableModel();
-
 
 
         if (session()->user['type'] != 'teacher') {
@@ -56,7 +54,7 @@ class Teacher extends BaseController
 
 
 //if teacher class_id isn't 0(like in database), add to the data new keys, for displaying teachers array
-        if ($teacher['class_id'] != 0 ) {
+        if ($teacher['class_id'] != 0) {
             //get lessons value with static function from model class
             $data['schedule'] = TimeTableModel::getLessons($teacher['class_id']);
             //get teacher class
@@ -118,12 +116,13 @@ class Teacher extends BaseController
         } else {
             $errors = $this->validator->listErrors();
         }
-        return  redirect()->to(base_url('/teacher/index'))->with('errors', $errors);
+        return redirect()->to(base_url('/teacher/index'))->with('errors', $errors);
     }
 
-    public function deleteLesson(int $id) {
+    public function deleteLesson(int $id)
+    {
         $lesson = $this->schedules->find($id);
-        if($lesson) {
+        if ($lesson) {
             $this->schedules->delete($id);
             return redirect()->to(base_url('/teacher/index'))->with('success', 'Lesson is successfully deleted');
         }
@@ -141,5 +140,25 @@ class Teacher extends BaseController
         }
 
         return redirect()->to(base_url('/teacher/index'))->with('errors', 'Wrong date');
+    }
+
+    public function getLessonStudents(int $lesson_id)
+    {
+        $teacher = $this->teachers->where('user_id', session()->user['id'])->first();
+        $data = [
+            'teacher_schedule' => $this->schedules->getLessonStudents($lesson_id),
+            'lesson' => $this->lessons->find($teacher['lesson_id'])
+        ];
+
+        return view('users/teacher/index', $data);
+    }
+    public function deleteStudent(int $id)
+    {
+        $student = $this->schedules->find($id);
+        if ($student) {
+            $this->schedules->delete($id);
+            return redirect()->to(base_url('/teacher/getLessonStudent'))->with('success', 'Student is successfully deleted');
+        }
+        return redirect()->to(base_url('/teachers/index'))->with('errors', 'Student is not found');
     }
 }
