@@ -80,6 +80,12 @@ class TimeTableModel extends Model
     }
 
     //get all lessons by teacher_id by chosen date
+
+    /**
+     * @param int $teacher_id
+     * @param string|null $date
+     * @return array
+     */
     public function getTeacherLessons(int $teacher_id, string $date = null)
     {
         if ($date == null) {
@@ -95,19 +101,6 @@ class TimeTableModel extends Model
             ->where('week_day', $day)
             ->orderBy('lesson_number', 'ASC')
             ->findAll();
-    }
-
-    public function getLessonStudents($lesson_id)
-    {
-        return $this
-            ->select('timetable.id, timetable.lesson_number, lessons.title,users.firstname, users.lastname, timetable.lesson_id, students.class_id, students.user_id,classes.title as class, week_day')
-            ->join('lessons', 'lessons.id = timetable.lesson_id', 'left')
-            ->join('classes', 'classes.id = timetable.class_id', 'left')
-            ->join('students', 'students.id = classes.id')
-            ->join('users','users.id = students.user_id')
-            ->where('lessons.id', $lesson_id)
-        ->orderBy('lesson_number', 'ASC')
-        ->findAll();
     }
 
 }
