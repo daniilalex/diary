@@ -102,6 +102,20 @@ class TimeTableModel extends Model
             ->orderBy('lesson_number', 'ASC')
             ->findAll();
     }
+    public static function getLessonsByWeekDay(string $week_day, int $class_id)
+    {
+        $db = \Config\Database::connect();
 
+        return $db->table('schedules')
+            ->select('lesson_id, lesson_number, lessons.title')
+            ->join('lessons', 'lessons.id = schedules.lesson_id')
+            ->where('week_day', $week_day)
+            ->where('class_id', $class_id)
+            ->orderBy('lesson_number asc')
+            ->get()->getResultArray();
+
+    }
 }
+
+
 

@@ -46,4 +46,13 @@ class GradeModel extends Model
     protected $afterFind      = [];
     protected $beforeDelete   = [];
     protected $afterDelete    = [];
+
+    public function getStudentGrade(int $student_id, $date, $lesson_id)
+    {
+        return $this->select('grade')
+                ->where('student_id', $student_id)
+                ->where('date', $date)
+                ->where('lesson_id', $lesson_id)
+                ->first()['grade'] ?? null;
+    }
 }
